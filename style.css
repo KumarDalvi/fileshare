@@ -34,6 +34,7 @@
     margin: 0 10px;
     font-weight: bold;
     transition: color 0.3s ease;
+      font-size:32px;
   }
   
   .navbar nav a:hover {
