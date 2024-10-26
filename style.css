@@ -27,7 +27,7 @@
     z-index: 10;
   }
   
-  .navbar h1 {
+  .navbar h1 a{
     text-decoration: none;
       color:white;
     margin-bottom: 5px;
