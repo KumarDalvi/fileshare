@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upload Files</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="db.js"></script>
+  <script defer src="upload.js"></script>
+</head>
+<body>
+  <header class="navbar">
+    <h1>FileShare</h1>
+    <nav>
+      <a href="download.html">Download</a>
+    </nav>
+  </header>
+
+  <section class="upload-container">
+    <h2>Upload Your Files</h2>
+
+    <div id="dropZone" class="drop-zone">
+      <label for="fileInput" id="uploadLabel">Choose or Drag & Drop Files</label>
+      <input type="file" id="fileInput" multiple>
+    </div>
+
+    <button id="uploadBtn" class="btn">Upload</button>
+    <div id="statusMessage"></div>
+
+    <div id="fileListContainer"></div>
+    <div id="progressContainer"></div>
+  </section>
+
+  <script>
+    const uploadBtn = document.getElementById('uploadBtn');
+    const fileInput = document.getElementById('fileInput');
+    const statusMessage = document.getElementById('statusMessage');
+    const progressContainer = document.getElementById('progressContainer');
+    const dropZone = document.getElementById('dropZone');
+    const fileListContainer = document.getElementById('fileListContainer');
+
+    // Prevent default behavior when drag events happen
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, preventDefaults, false);
+      document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    // Highlight drop zone when dragging files
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    // Remove highlight when not dragging
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    // Handle drop event
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    function highlight() {
+      dropZone.classList.add('drag-over');
+    }
+
+    function unhighlight() {
+      dropZone.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+
+      handleFiles(files); // Pass the files to handleFiles function
+    }
+
+    // Handle file input and drag-and-drop files
+    function handleFiles(files) {
+      fileInput.files = files; // Assign the dropped files to the input
+      displayFileList(files);   // Display the selected files
+    }
+
+    function displayFileList(files) {
+      fileListContainer.innerHTML = ''; // Clear previous list
+      Array.from(files).forEach(file => {
+        const fileItem = document.createElement('div');
+        fileItem.textContent = file.name;
+        fileListContainer.appendChild(fileItem);
+      });
+    }
+
+    // Upload button click handler
+    uploadBtn.addEventListener('click', async () => {
+      const files = fileInput.files;
+
+      if (files.length === 0) {
+        alert('Please select a file.');
+        return;
+      }
+
+      statusMessage.textContent = '';
+      progressContainer.innerHTML = ''; // Clear previous progress bars
+
+      try {
+        for (const file of files) {
+          await uploadFile(file);
+        }
+        statusMessage.textContent = 'All files uploaded successfully!';
+      } catch (error) {
+        console.error('Error uploading files:', error);
+        statusMessage.textContent = 'Error uploading files. Please try again.';
+      }
+    });
+
+    async function uploadFile(file) {
+      const progressBar = document.createElement('div');
+      progressBar.className = 'progress-bar';
+      progressBar.innerHTML = `<span>${file.name}</span><div class="progress" style="width: 0%;"></div>`;
+      progressContainer.appendChild(progressBar);
+
+      // Simulate the upload process
+      return new Promise((resolve, reject) => {
+        let uploaded = 0;
+        const total = 100; // Simulating 100% upload
+
+        const interval = setInterval(() => {
+          uploaded += 10; // Simulating progress
+          const progress = Math.min(uploaded, total);
+          progressBar.querySelector('.progress').style.width = `${progress}%`;
+
+          if (progress >= total) {
+            clearInterval(interval);
+            addFile(file); // Store file in IndexedDB
+            resolve();
+          }
+        }, 200);
+      });
+    }
+  </script>
+</body>
+</html>
